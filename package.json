@@ -1,0 +1,43 @@
+{
+  "name": "graphql-node-api-2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "clusters": "NODE_ENV=production port=8080 node dist/clusters",
+    "build": "npm run gulp build",
+    "start": "npm run build && npm run clusters",
+    "dev": "NODE_ENV=development JWT_SECRET=ironman nodemon dist/index",
+    "gulp": "gulp",
+    "test": "NODE_ENV=test JWT_SECRET=jwt_test mocha",
+    "pipelines": "NODE_ENV=pipelines JWT_SECRET=jwt_pipelines mocha",
+    "coverage": "nyc --extension .ts --include 'src/**/*.ts' --reporter html npm test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/express": "4.11.1",
+    "@types/express-graphql": "0.6.1",
+    "@types/graphql": "0.13.0",
+    "@types/jsonwebtoken": "7.2.7",
+    "@types/node": "9.6.6",
+    "@types/sequelize": "4.27.15",
+    "bcryptjs": "2.4.3",
+    "express": "4.16.3",
+    "gulp": "3.9.1",
+    "gulp-clean": "0.4.0",
+    "gulp-typescript": "4.0.2",
+    "mysql2": "1.5.3",
+    "nodemon": "1.17.3",
+    "sequelize": "4.37.6",
+    "sequelize-cli": "^4.0.0",
+    "typescript": "2.8.3"
+  },
+  "dependencies": {
+    "express-graphql": "0.6.12",
+    "graphql": "0.13.2",
+    "graphql-tools": "2.24.0",
+    "jsonwebtoken": "8.2.1"
+  }
+}
