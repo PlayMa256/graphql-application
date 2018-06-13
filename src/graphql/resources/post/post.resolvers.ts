@@ -4,6 +4,9 @@ import { UserInstance } from "../../../models/UserModel";
 import { Transaction } from "sequelize";
 import { PostInstance } from "../../../models/PostModel";
 import { handleError } from "../../../utils/utils";
+import { authResolvers } from "../../composable/auth.resolver";
+import { compose } from "../../composable/composable.resolver";
+import { AuthUser } from "../../../interfaces/AuthUserInterface";
 
 export const postResolvers = {
 	Post: {
@@ -36,41 +39,49 @@ export const postResolvers = {
 		},
 	},
 	Mutation: {
-		createPost: (parent, { input }, { db }: { db: DbConnection }, info: GraphQLResolveInfo) => {
+		createPost: compose(...authResolvers)((parent, { input }, { db, authUser }: { db: DbConnection, authUser: AuthUser }, info: GraphQLResolveInfo) => {
+			input.author = authUser.id;
 			return db.sequelize.transaction((t: Transaction) => {
 				return db.Post
 					.create(input, {
 						transaction: t
 					})
 			}).catch(handleError);
-		},
-		updatePost: (parent, { id, input }, { db }: { db: DbConnection }, info: GraphQLResolveInfo) => { 
+		}),
+
+		updatePost: compose(...authResolvers)((parent, { id, input }, { db, authUser }: { db: DbConnection, authUser: AuthUser }, info: GraphQLResolveInfo) => { 
 			id = parseInt(id);
 			return db.sequelize.transaction((t: Transaction) => {
 				return db.Post.findById(id).then((post: PostInstance) => {
 					if (!post) {
 						throw new Error(`post ${id} not found`)
 					}
+					if (post.get('author') !== authUser.id) {
+						throw new Error(`post cant be edited by the current user, you can only update your own posts`)
+					}
+					input.author = authUser.id;
 					return post.update(input, {
 						transaction: t
 					});
 				})
 			}).catch(handleError);
-		},
-		deletePost: (parent, { id }, { db }: { db: DbConnection }, info: GraphQLResolveInfo) => { 
+		}),
+		deletePost: compose(...authResolvers)((parent, { id }, {db, authUser}: {db: DbConnection, authUser: AuthUser}, info: GraphQLResolveInfo) => {
 			id = parseInt(id);
 			return db.sequelize.transaction((t: Transaction) => {
-				return db.Post.findById(id).then((post: PostInstance) => {
-					if (!post) {
-						throw new Error(`post ${id} not found`)
-					}
-					return post.destroy({
-						transaction: t
-					}).then((post) => {
-						return !!post;
-					});
-				})
+				return db.Post
+						.findById(id)
+					.then((post: PostInstance) => {
+						if (!post) {
+								throw new Error(`Post with id ${id} not found!`)
+						}
+						if (post.get('author') !== authUser.id) {
+							throw new Error(`Unauthorized! You can only delete posts by yourself!`)
+						}
+								return post.destroy({transaction: t})
+										.then(post => !!post);
+				});
 			}).catch(handleError);
-		}
+	})
 	}
 }

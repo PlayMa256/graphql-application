@@ -4,9 +4,11 @@ import db from "./models";
 import { normalizePort, onError, onListening } from "./utils/utils";
 
 const server = http.createServer(app);
-const port = normalizePort(process.env.port || 3001);
+const port = normalizePort(process.env.port || 3000);
 
-server.listen(port);
+server.listen(port, () => {
+	console.log('server listening to port', port);
+});
 db.sequelize.sync().then(() => {
 	server.on("error", onError(server));
 	server.on("listening", onListening(server));
