@@ -7,30 +7,41 @@ import { handleError } from "../../../utils/utils";
 import { authResolvers } from "../../composable/auth.resolver";
 import { compose } from "../../composable/composable.resolver";
 import { AuthUser } from "../../../interfaces/AuthUserInterface";
+import { DataLoaders } from "../../../interfaces/DataLoadersInterface";
+import { ResolverContext } from "../../../interfaces/ResolverContextInterface";
 
 export const postResolvers = {
 	Post: {
-		author: (post, args, { db }: { db: DbConnection }, info: GraphQLResolveInfo) => {
-			return db.User.findById(post.get('author')).catch(handleError);
+		author: (post, args, { db, dataLoaders: { userLoader } }: { db: DbConnection, dataLoaders: DataLoaders }, info: GraphQLResolveInfo) => {
+			return userLoader
+				.load({
+					key: post.get('author'),
+					info
+				})
+				.catch(handleError);
 		},
-		comments: (post, { first = 10, offset = 0 }, { db }: { db: DbConnection }, info: GraphQLResolveInfo) => { 
-			return db.Comment.findAll({
+		comments: (post, { first = 10, offset = 0 }, ctx: ResolverContext, info: GraphQLResolveInfo) => { 
+			return ctx.db.Comment.findAll({
 				where: { post: post.get('id') },
 				limit: first,
-				offset
+				offset,
+				attributes: ctx.requestedFields.getFields(info)
 			}).catch(handleError);
 		}
 	},
 	Query: {
-		posts: (parent, { first = 10, offset = 0 }, { db }: { db: DbConnection }, info: GraphQLResolveInfo) => {
-			return db.Post.findAll({
+		posts: (parent, { first = 10, offset = 0 }, ctx: ResolverContext, info: GraphQLResolveInfo) => {
+			return ctx.db.Post.findAll({
 				limit: first,
-				offset
+				offset,
+				attributes: ctx.requestedFields.getFields(info, {keep: ['id'], exclude: ['comments']})
 			}).catch(handleError);
 		},
-		post: (parent, { id }, { db }: { db: DbConnection }, info: GraphQLResolveInfo) => {
+		post: (parent, { id }, ctx: ResolverContext, info: GraphQLResolveInfo) => {
 			id = parseInt(id);
-			return db.Post.findById(id).then((post: PostInstance) => {
+			return ctx.db.Post.findById(id, {
+				attributes: ctx.requestedFields.getFields(info, {keep: ['id'], exclude: ['comments']})
+			}).then((post: PostInstance) => {
 				if (!post) {
 					throw new Error(`post with id ${id} not found`);
 				}
@@ -78,7 +89,8 @@ export const postResolvers = {
 						if (post.get('author') !== authUser.id) {
 							throw new Error(`Unauthorized! You can only delete posts by yourself!`)
 						}
-								return post.destroy({transaction: t})
+						return post.destroy({ transaction: t })
+									// @ts-ignore
 										.then(post => !!post);
 				});
 			}).catch(handleError);

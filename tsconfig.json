@@ -4,6 +4,6 @@
     "target": "es6",
     "module": "commonjs"
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/graphql/ast/RequestedFields.js"],
   "exclude": ["node_modules"]
 }
