@@ -14,11 +14,11 @@ export interface PostAttributes {
 }
 
 export interface PostInstance extends Sequelize.Instance<PostAttributes> {}
-
+// @ts-ignore
 export interface PostModel extends BaseModelInterface, Sequelize.Model<PostInstance, PostAttributes> {}
 
 export default (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes): PostModel => {
-
+// @ts-ignore
     const Post: PostModel = sequelize.define('Post', {
         id: {
             type: DataTypes.INTEGER,
@@ -45,6 +45,7 @@ export default (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes):
     });
 
     Post.associate = (models: ModelsInterface): void => {
+        // @ts-ignore
         Post.belongsTo(models.User, {
             foreignKey: {
                 allowNull: false,

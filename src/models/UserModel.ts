@@ -19,7 +19,7 @@ export interface UserInstance
     UserAttributes {
   isPassword(encodedPassword: string, password: string): boolean;
 }
-
+// @ts-ignore
 export interface UserModel
   extends BaseModelInterface,
     Sequelize.Model<UserInstance, UserAttributes> {}
@@ -28,6 +28,7 @@ export default (
   sequelize: Sequelize.Sequelize,
   DataTypes: Sequelize.DataTypes
 ): UserModel => {
+  // @ts-ignore
   const User: UserModel = sequelize.define(
     "User",
     {
